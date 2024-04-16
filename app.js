@@ -99,7 +99,7 @@ function createContestDropdown(contestID, problems) {
         checkbox.id = `${problem.ContestSlug}-${problem.ProblemIndex}`;
         checkbox.checked = isChecked(problem.ContestSlug, problem.ProblemIndex);
         checkbox.addEventListener('change', () => {
-            saveCheckboxState(problem.ContestSlug, problem.ProblemIndex, checkbox.checked);
+            saveCheckboxState(problem.ContestSlug, problem.ProblemIndex, checkbox.checked, problems, contestDropdown);
         });
         const problemLink = document.createElement('a');
         problemLink.href = `https://leetcode.com/problems/${problem.TitleSlug}`;
@@ -145,10 +145,15 @@ function isChecked(contestSlug, problemIndex) {
     return checkedProblems[`${contestSlug}-${problemIndex}`] || false;
 }
 
-function saveCheckboxState(contestSlug, problemIndex, checked) {
+function saveCheckboxState(contestSlug, problemIndex, checked, problems, contestDropdown) {
     let checkedProblems = JSON.parse(localStorage.getItem('checkedProblems') || '{}');
     checkedProblems[`${contestSlug}-${problemIndex}`] = checked;
     localStorage.setItem('checkedProblems', JSON.stringify(checkedProblems));
+    if (checkAllProblemsChecked(problems)) {
+        contestDropdown.classList.add('all-checked');
+    } else {
+        contestDropdown.classList.remove('all-checked');
+    }
 }
 
 function checkAllProblemsChecked(problems) {
