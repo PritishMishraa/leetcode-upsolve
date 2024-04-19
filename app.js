@@ -14,11 +14,11 @@ darkModeToggle.addEventListener('change', () => {
     localStorage.setItem('darkMode', isDarkMode);
 });
 
-// Check if data is stored in localStorage and is not older than 7 days
+// Check if data is stored in localStorage and is not older than 1 day
 const lastUpdated = localStorage.getItem('lastUpdated');
 const currentTime = new Date().getTime();
-const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
-if (lastUpdated && currentTime - lastUpdated < oneWeekInMs) {
+const oneDayInMs = 1000 * 60 * 60 * 24;
+if (lastUpdated && currentTime - lastUpdated < oneDayInMs) {
     const data = JSON.parse(localStorage.getItem('leetcodeData'));
     renderContests(data);
 } else {
