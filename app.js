@@ -1,11 +1,25 @@
 const darkModeToggle = document.getElementById('dark-mode-toggle');
 const weeklyContestsContainer = document.getElementById('weekly-contests');
 const biweeklyContestsContainer = document.getElementById('biweekly-contests');
+const autoFetchToggle = document.getElementById('auto-fetch-toggle');
+const spinner = document.getElementById('spinner');
 
 // Check if dark mode is enabled in localStorage
 const isDarkMode = localStorage.getItem('darkMode') === 'true';
 document.body.classList.toggle('dark-mode', isDarkMode);
 darkModeToggle.checked = isDarkMode;
+
+// Check if Leetcode Cookie is saved in localStorage
+const cookie = localStorage.getItem('leetcodeCookie');
+autoFetchToggle.checked = cookie !== null ? true : false;
+
+function toggleSpinner(show) {
+    if (show) {
+        spinner.style.display = 'block';
+    } else {
+        spinner.style.display = 'none';
+    }
+}
 
 // Add event listener for dark mode toggle
 darkModeToggle.addEventListener('change', () => {
@@ -14,24 +28,86 @@ darkModeToggle.addEventListener('change', () => {
     localStorage.setItem('darkMode', isDarkMode);
 });
 
+autoFetchToggle.addEventListener('change', function () {
+    const isAutoFetch = cookie !== null ? true : false;
+    document.body.classList.toggle('auto-fetch', isAutoFetch);
+    if (autoFetchToggle.checked) {
+        // this method is not correct! copy the cookie sent by leetcode.com, follow this: https://i.postimg.cc/C5tSpYDR/Screenshot-2024-04-21-at-6-47-35-PM.png and paste it in the prompt
+        alert('To get your Leetcode Cookie follow this: \n\n1.Open leetcode.com\n2.Right Click -> Inspect -> Console\n3.Write: document.cookie \n4.Copy the result \n\nPlease note that your LeetCode cookie will be stored in your browser only.');
+        const userCookie = prompt('Please enter your LeetCode cookie:');
+        if (userCookie !== null) {
+            localStorage.setItem('leetcodeCookie', userCookie);
+            alert('LeetCode cookie saved successfully!');
+        } else {
+            autoFetchToggle.checked = false;
+        }
+    } else {
+        const status = confirm('This will remove your LeetCode cookie. Are you sure you want to continue?')
+        if (status) {
+            localStorage.removeItem('leetcodeCookie');
+            alert('LeetCode cookie removed successfully!');
+        } else {
+            autoFetchToggle.checked = true;
+        }
+    }
+});
+
+// Function to fetch data using the LeetCode cookie
+function fetchDataWithCookie() {
+    const data = JSON.parse(localStorage.getItem('leetcodeData'));
+    if (cookie) {
+        toggleSpinner(true);
+        fetch(`https://pritishmishra579.npkn.net/e60fbc?cookie=${cookie}`)
+            .then(response => response.json())
+            .then(leetcodeData => {
+                const mergedData = mergeDataSets(data, leetcodeData);
+                localStorage.setItem('leetcodeData', JSON.stringify(mergedData));
+                renderContests(mergedData);
+                toggleSpinner(false);
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    }
+    renderContests(data);
+}
+
+// Refetch on window focus
+window.addEventListener('focus', fetchDataWithCookie);
+
 // Check if data is stored in localStorage and is not older than 1 day
 const lastUpdated = localStorage.getItem('lastUpdated');
 const currentTime = new Date().getTime();
 const oneDayInMs = 1000 * 60 * 60 * 24;
 if (lastUpdated && currentTime - lastUpdated < oneDayInMs) {
-    const data = JSON.parse(localStorage.getItem('leetcodeData'));
-    renderContests(data);
+    fetchDataWithCookie();
 } else {
-    // Fetch data from the provided URL
-    fetch('https://zerotrac.github.io/leetcode_problem_rating/data.json')
-        .then(response => response.json())
-        .then(data => {
-            // Store the data in localStorage with a timestamp
-            localStorage.setItem('leetcodeData', JSON.stringify(data));
-            localStorage.setItem('lastUpdated', new Date().getTime());
-            renderContests(data);
-        })
-        .catch(error => console.error('Error fetching data:', error));
+    // Fetch data from the URLs
+    if (cookie) {
+        toggleSpinner(true);
+        Promise.all([
+            fetch('https://zerotrac.github.io/leetcode_problem_rating/data.json'),
+            fetch(`https://pritishmishra579.npkn.net/e60fbc?cookie=${cookie}`)
+        ])
+            .then(responses => Promise.all(responses.map(response => response.json())))
+            .then(([zerotracData, leetcodeData]) => {
+                const mergedData = mergeDataSets(zerotracData, leetcodeData);
+                localStorage.setItem('leetcodeData', JSON.stringify(mergedData));
+                localStorage.setItem('lastUpdated', new Date().getTime());
+                renderContests(mergedData);
+                toggleSpinner(false);
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    } else {
+        toggleSpinner(true);
+        fetch('https://zerotrac.github.io/leetcode_problem_rating/data.json')
+            .then(response => response.json())
+            .then(data => {
+                localStorage.setItem('leetcodeData', JSON.stringify(data));
+                localStorage.setItem('lastUpdated', new Date().getTime());
+                renderContests(data);
+                toggleSpinner(false);
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    }
 }
 
 function renderContests(data) {
@@ -97,7 +173,7 @@ function createContestDropdown(contestID, problems) {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = `${problem.ContestSlug}-${problem.ProblemIndex}`;
-        checkbox.checked = isChecked(problem.ContestSlug, problem.ProblemIndex);
+        checkbox.checked = isChecked(problem.ContestSlug, problem.ProblemIndex) || problem.isSolved;
         checkbox.addEventListener('change', () => {
             saveCheckboxState(problem.ContestSlug, problem.ProblemIndex, checkbox.checked, problems, contestDropdown);
         });
@@ -158,4 +234,17 @@ function saveCheckboxState(contestSlug, problemIndex, checked, problems, contest
 
 function checkAllProblemsChecked(problems) {
     return problems.every(problem => isChecked(problem.ContestSlug, problem.ProblemIndex));
+}
+
+function mergeDataSets(zerotracData, leetcodeData) {
+    const solvedProblems = new Set(
+        leetcodeData.stat_status_pairs
+            .filter(pair => pair.status === 'ac')
+            .map(pair => pair.stat.question__title_slug)
+    );
+
+    return zerotracData.map(problem => {
+        const isSolved = solvedProblems.has(problem.TitleSlug);
+        return { ...problem, isSolved };
+    });
 }

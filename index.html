@@ -25,12 +25,22 @@
                 Mishra</a> and <a href="https://claude.ai/" target="_blank">claude.ai</a>. The data is provided by <a
                 href="https://github.com/zerotrac/leetcode_problem_rating" target="_blank">this GitHub project</a>. We
             don't have the data of the latest contests as calculating the ratings takes time.</p>
-        <div class="theme-toggle">
-            <span class="toggle-text">Dark Mode</span>
-            <label class="switch">
-                <input type="checkbox" id="dark-mode-toggle">
-                <span class="slider"></span>
-            </label>
+        <div class="options">
+            <div class="toggle-container">
+                <span class="toggle-label">Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="dark-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="toggle-container">
+                <span class="toggle-label" id="auto-fetch-tooltip">Auto Fetch</span>
+                <label class="switch">
+                    <input type="checkbox" id="auto-fetch-toggle">
+                    <span class="slider"></span>
+                </label>
+                <div id="spinner"></div>
+            </div>
         </div>
     </header>
     <div id="container">
