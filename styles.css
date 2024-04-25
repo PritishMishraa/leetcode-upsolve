@@ -43,13 +43,18 @@ label {
     color: inherit;
 }
 
-.theme-toggle {
+.options {
+    display: flex;
+    gap: 10px;
+}
+
+.toggle-container {
     display: flex;
     align-items: center;
     margin-top: 10px;
 }
 
-.toggle-text {
+.toggle-label {
     margin-right: 10px;
 }
 
@@ -96,6 +101,32 @@ input:checked+.slider {
 
 input:checked+.slider:before {
     transform: translateX(20px);
+}
+
+#spinner {
+    display: none;
+    border: 4px solid #ccc;
+    border-left-color: #333;
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    animation: spin 5s linear infinite;
+    margin-left: 10px;
+}
+
+body.dark-mode #spinner {
+    border: 4px solid #444444;
+    border-left-color: white;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 #container {
@@ -207,4 +238,19 @@ body.dark-mode .contest-dropdown.all-checked>summary {
     background-color: #2E7D32;
     color: #fff;
     text-decoration: line-through;
+}
+
+.refresh-icon {
+    display: none;
+    cursor: pointer;
+    margin-left: 10px;
+    fill: #666;
+}
+
+.toggle-container input[type="checkbox"]:checked+.slider+.refresh-icon {
+    display: block;
+}
+
+.refresh-icon:hover {
+    fill: #333;
 }
