@@ -2,7 +2,26 @@ const darkModeToggle = document.getElementById('dark-mode-toggle');
 const weeklyContestsContainer = document.getElementById('weekly-contests');
 const biweeklyContestsContainer = document.getElementById('biweekly-contests');
 const autoFetchToggle = document.getElementById('auto-fetch-toggle');
+const refreshIcon = document.getElementById('refresh-icon');
 const spinner = document.getElementById('spinner');
+// Define constants for refresh limit and storage key for refresh count
+const refreshLimit = 3;
+const refreshCountKey = 'refreshCount';
+
+// Add event listener to the refresh icon
+refreshIcon.addEventListener('click', () => {
+    const refreshCount = parseInt(localStorage.getItem(refreshCountKey)) || 0;
+    if (cookie === null || cookie === '') {
+        alert('Please save your LeetCode cookie first!');
+    } else {
+        if (refreshCount < refreshLimit) {
+            localStorage.setItem(refreshCountKey, refreshCount + 1);
+            fetchDataWithCookie();
+        } else {
+            alert('You have reached the refresh limit for today.');
+        }
+    }
+});
 
 // Check if dark mode is enabled in localStorage
 const isDarkMode = localStorage.getItem('darkMode') === 'true';
@@ -12,6 +31,15 @@ darkModeToggle.checked = isDarkMode;
 // Check if Leetcode Cookie is saved in localStorage
 const cookie = localStorage.getItem('leetcodeCookie');
 autoFetchToggle.checked = cookie !== null ? true : false;
+
+function toggleRefreshIcon(value) {
+    if (value) {
+        refreshIcon.style.display = 'block';
+    } else {
+        refreshIcon.style.display = 'none';
+    }
+}
+toggleRefreshIcon(cookie !== null);
 
 function toggleSpinner(show) {
     if (show) {
@@ -33,11 +61,11 @@ autoFetchToggle.addEventListener('change', function () {
     document.body.classList.toggle('auto-fetch', isAutoFetch);
     if (autoFetchToggle.checked) {
         // this method is not correct! copy the cookie sent by leetcode.com, follow this: https://i.postimg.cc/C5tSpYDR/Screenshot-2024-04-21-at-6-47-35-PM.png and paste it in the prompt
-        alert('To get your Leetcode Cookie follow this: \n\n1.Open leetcode.com\n2.Right Click -> Inspect -> Console\n3.Write: document.cookie \n4.Copy the result \n\nPlease note that your LeetCode cookie will be stored in your browser only.');
         const userCookie = prompt('Please enter your LeetCode cookie:');
-        if (userCookie !== null) {
+        if (userCookie !== null && userCookie !== '') {
             localStorage.setItem('leetcodeCookie', userCookie);
             alert('LeetCode cookie saved successfully!');
+            toggleRefreshIcon(true);
         } else {
             autoFetchToggle.checked = false;
         }
@@ -46,6 +74,7 @@ autoFetchToggle.addEventListener('change', function () {
         if (status) {
             localStorage.removeItem('leetcodeCookie');
             alert('LeetCode cookie removed successfully!');
+            toggleRefreshIcon(false);
         } else {
             autoFetchToggle.checked = true;
         }
@@ -70,15 +99,13 @@ function fetchDataWithCookie() {
     renderContests(data);
 }
 
-// Refetch on window focus
-window.addEventListener('focus', fetchDataWithCookie);
-
 // Check if data is stored in localStorage and is not older than 1 day
 const lastUpdated = localStorage.getItem('lastUpdated');
 const currentTime = new Date().getTime();
 const oneDayInMs = 1000 * 60 * 60 * 24;
 if (lastUpdated && currentTime - lastUpdated < oneDayInMs) {
-    fetchDataWithCookie();
+    const data = JSON.parse(localStorage.getItem('leetcodeData'));
+    renderContests(data);
 } else {
     // Fetch data from the URLs
     if (cookie) {

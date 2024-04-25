@@ -239,3 +239,18 @@ body.dark-mode .contest-dropdown.all-checked>summary {
     color: #fff;
     text-decoration: line-through;
 }
+
+.refresh-icon {
+    display: none;
+    cursor: pointer;
+    margin-left: 10px;
+    fill: #666;
+}
+
+.toggle-container input[type="checkbox"]:checked+.slider+.refresh-icon {
+    display: block;
+}
+
+.refresh-icon:hover {
+    fill: #333;
+}
