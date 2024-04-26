@@ -5,22 +5,38 @@ const autoFetchToggle = document.getElementById('auto-fetch-toggle');
 const refreshIcon = document.getElementById('refresh-icon');
 const spinner = document.getElementById('spinner');
 // Define constants for refresh limit and storage key for refresh count
-const refreshLimit = 3;
+const refreshLimit = 6;
 const refreshCountKey = 'refreshCount';
+const resetInterval = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+
+// Function to reset refresh count
+function resetRefreshCount() {
+  localStorage.setItem(refreshCountKey, 0);
+}
 
 // Add event listener to the refresh icon
 refreshIcon.addEventListener('click', () => {
-    const refreshCount = parseInt(localStorage.getItem(refreshCountKey)) || 0;
-    if (cookie === null || cookie === '') {
-        alert('Please save your LeetCode cookie first!');
-    } else {
-        if (refreshCount < refreshLimit) {
-            localStorage.setItem(refreshCountKey, refreshCount + 1);
-            fetchDataWithCookie();
-        } else {
-            alert('You have reached the refresh limit for today.');
-        }
+  const refreshCount = parseInt(localStorage.getItem(refreshCountKey)) || 0;
+  if (cookie === null || cookie === '') {
+    alert('Please save your LeetCode cookie first!');
+  } else {
+    // Check for last reset time
+    const lastResetTime = parseInt(localStorage.getItem('lastResetTime')) || 0;
+    const currentTime = Date.now();
+
+    // Reset if 6 hours have passed since last reset
+    if (currentTime - lastResetTime >= resetInterval) {
+      resetRefreshCount();
+      localStorage.setItem('lastResetTime', currentTime);
     }
+
+    if (refreshCount < refreshLimit) {
+      localStorage.setItem(refreshCountKey, refreshCount + 1);
+      fetchDataWithCookie();
+    } else {
+      alert('You have reached the refresh limit for today.');
+    }
+  }
 });
 
 // Check if dark mode is enabled in localStorage
