@@ -180,6 +180,15 @@ body.dark-mode .contest-dropdown>summary {
     text-decoration: underline;
 }
 
+.solved-problems {
+    color: #666666;
+    margin-left: 10px;
+}
+
+body.dark-mode .solved-problems {
+    color: #b6b6b6;
+}
+
 .placeholder-text {
     background-color: #f2f2f2;
     padding: 10px;

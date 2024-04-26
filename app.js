@@ -11,32 +11,32 @@ const resetInterval = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
 // Function to reset refresh count
 function resetRefreshCount() {
-  localStorage.setItem(refreshCountKey, 0);
+    localStorage.setItem(refreshCountKey, 0);
 }
 
 // Add event listener to the refresh icon
 refreshIcon.addEventListener('click', () => {
-  const refreshCount = parseInt(localStorage.getItem(refreshCountKey)) || 0;
-  if (cookie === null || cookie === '') {
-    alert('Please save your LeetCode cookie first!');
-  } else {
-    // Check for last reset time
-    const lastResetTime = parseInt(localStorage.getItem('lastResetTime')) || 0;
-    const currentTime = Date.now();
-
-    // Reset if 6 hours have passed since last reset
-    if (currentTime - lastResetTime >= resetInterval) {
-      resetRefreshCount();
-      localStorage.setItem('lastResetTime', currentTime);
-    }
-
-    if (refreshCount < refreshLimit) {
-      localStorage.setItem(refreshCountKey, refreshCount + 1);
-      fetchDataWithCookie();
+    const refreshCount = parseInt(localStorage.getItem(refreshCountKey)) || 0;
+    if (cookie === null || cookie === '') {
+        alert('Please save your LeetCode cookie first!');
     } else {
-      alert('You have reached the refresh limit for today.');
+        // Check for last reset time
+        const lastResetTime = parseInt(localStorage.getItem('lastResetTime')) || 0;
+        const currentTime = Date.now();
+
+        // Reset if 6 hours have passed since last reset
+        if (currentTime - lastResetTime >= resetInterval) {
+            resetRefreshCount();
+            localStorage.setItem('lastResetTime', currentTime);
+        }
+
+        if (refreshCount < refreshLimit) {
+            localStorage.setItem(refreshCountKey, refreshCount + 1);
+            fetchDataWithCookie();
+        } else {
+            alert('You have reached the refresh limit for today.');
+        }
     }
-  }
 });
 
 // Check if dark mode is enabled in localStorage
@@ -198,11 +198,21 @@ function createContestDropdown(contestID, problems) {
     const contestDropdown = document.createElement('details');
     contestDropdown.classList.add('contest-dropdown');
     const summary = document.createElement('summary');
+    const summaryTextContainer = document.createElement('div');
     const summaryText = document.createElement('span');
+    const solvedProblems = document.createElement('span');
+    solvedProblems.classList.add('solved-problems');
+    const solvedProblemsCount = problems.filter(problem => problem.isSolved || isChecked(problem.ContestSlug, problem.ProblemIndex)).length;
+    const totalProblemsCount = problems.length;
+    solvedProblems.textContent = `${solvedProblemsCount}/${totalProblemsCount}`;
     summaryText.textContent = contestID;
     const dropdownArrow = document.createElement('span');
     dropdownArrow.classList.add('dropdown-arrow');
-    summary.appendChild(summaryText);
+    summaryTextContainer.appendChild(summaryText);
+    summaryTextContainer.appendChild(solvedProblems);
+    summary.appendChild(summaryTextContainer);
+    // summary.appendChild(summaryText);
+    // summary.appendChild(solvedProblems);
     summary.appendChild(dropdownArrow);
     contestDropdown.appendChild(summary);
 
@@ -219,6 +229,9 @@ function createContestDropdown(contestID, problems) {
         checkbox.checked = isChecked(problem.ContestSlug, problem.ProblemIndex) || problem.isSolved;
         checkbox.addEventListener('change', () => {
             saveCheckboxState(problem.ContestSlug, problem.ProblemIndex, checkbox.checked, problems, contestDropdown);
+            const solvedProblemsCount = problems.filter(problem => problem.isSolved || isChecked(problem.ContestSlug, problem.ProblemIndex)).length;
+            console.log(solvedProblemsCount);
+            solvedProblems.textContent = `${solvedProblemsCount}/${totalProblemsCount}`;
         });
         const problemLink = document.createElement('a');
         problemLink.href = `https://leetcode.com/problems/${problem.TitleSlug}`;
@@ -247,11 +260,21 @@ function createContestDropdown(contestID, problems) {
             contestLink.target = '_blank';
             contestLink.textContent = contestID;
             summary.innerHTML = '';
-            summary.appendChild(contestLink);
+            summaryTextContainer.innerHTML = '';
+            summaryTextContainer.appendChild(contestLink);
+            summaryTextContainer.appendChild(solvedProblems);
+            summary.appendChild(summaryTextContainer);
+            // summary.appendChild(contestLink);
+            // summary.appendChild(solvedProblems);
             summary.appendChild(dropdownArrow);
         } else {
             summary.innerHTML = '';
-            summary.appendChild(summaryText);
+            summaryTextContainer.innerHTML = '';
+            summaryTextContainer.appendChild(summaryText);
+            summaryTextContainer.appendChild(solvedProblems);
+            summary.appendChild(summaryTextContainer);
+            // summary.appendChild(summaryText);
+            // summary.appendChild(solvedProblems);
             summary.appendChild(dropdownArrow);
         }
     });
